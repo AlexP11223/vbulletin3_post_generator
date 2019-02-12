@@ -1,0 +1,16 @@
+{
+  "name": "alexp/vbulletin3_postgen",
+  "description": "",
+  "minimum-stability": "stable",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Alex P",
+      "email": "alexp.frl@gmail.com"
+    }
+  ],
+  "require": {
+    "guzzlehttp/guzzle": "6.3.3",
+    "fzaninotto/faker": "v1.8.0"
+  }
+}
