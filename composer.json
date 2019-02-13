@@ -11,6 +11,7 @@
   ],
   "require": {
     "guzzlehttp/guzzle": "6.3.3",
-    "fzaninotto/faker": "v1.8.0"
+    "fzaninotto/faker": "v1.8.0",
+    "sunra/php-simple-html-dom-parser": "v1.5.2"
   }
 }
