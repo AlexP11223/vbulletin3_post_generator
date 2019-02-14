@@ -21,4 +21,5 @@ foreach ($users as $user)
 
 $forum_ids = array_diff(range(6, 35), [23]);
 
-rand_value($users)->generateThread(rand_value($forum_ids));
+$postId = rand_value($users)->generateThread(rand_value($forum_ids));
+rand_value($users)->generateReply($postId);

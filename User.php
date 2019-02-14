@@ -65,21 +65,15 @@ class User
 	 */
 	public function generateThread($forumId)
 	{
-		$this->log("Generating thread in forum $forumId");
+		$this->log("Creating thread in forum $forumId");
 
 		$url = "/newthread.php?do=newthread&f=$forumId";
 
 		$html = $this->client->get($url)->getBody()->getContents();
 
-		$dom = HtmlDomParser::str_get_html($html);
-
-		$hiddenParams = flatten(array_map(function ($el) {
-			return [$el->name => $el->value];
-		}, $dom->find('input[type=hidden]')));
-
 		$response = $this->client->post($url, [
 			'allow_redirects' => false,
-			'form_params' => array_merge($hiddenParams, [
+			'form_params' => array_merge($this->getHiddenParams($html), [
 				'subject' => $this->generateThreadSubject(),
 				'message' => $this->generateMessageText(),
 				'iconid' => 0,
@@ -113,6 +107,37 @@ class User
 		return $id;
 	}
 
+	function generateReply($postId)
+	{
+		$html = $this->client->get("/newreply.php?do=newreply&noquote=1&p=$postId")->getBody()->getContents();
+
+		$hiddenParams = $this->getHiddenParams($html);
+		$threadId = (int) $hiddenParams['t'];
+		if (!$threadId) {
+			var_dump($html);
+			throw new \Exception($this->msg("Failed to find thread id"));
+		}
+
+		$this->log("Replying to post $postId in thread $threadId");
+
+		$response = $this->client->post("/newreply.php?do=postreply&t=$threadId", [
+			'allow_redirects' => false,
+			'form_params' => array_merge($this->getHiddenParams($html), [
+				'title' => '',
+				'message' => $this->generateMessageText(),
+				'iconid' => 0,
+				'parseurl' => 1,
+				'rating' => 0,
+				'emailupdate' => 9999 // no
+			])
+		]);
+
+		if ($response->getStatusCode() != 302) {
+			var_dump($response);
+			throw new \Exception($this->msg('Failed to reply'));
+		}
+	}
+
 	/**
 	 * @param $text
 	 * @return string
@@ -141,5 +166,17 @@ class User
 	 */
 	private function generateThreadSubject() {
 		return utf8_to_cp1251(rand_value($this->fakers)->realText(80));
+	}
+
+	/**
+	 * @param $html
+	 * @return array
+	 */
+	private function getHiddenParams($html)
+	{
+		$dom = HtmlDomParser::str_get_html($html);
+		return flatten(array_map(function ($el) {
+			return [$el->name => $el->value];
+		}, $dom->find('input[type=hidden]')));
 	}
 }
