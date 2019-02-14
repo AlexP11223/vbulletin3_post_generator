@@ -23,8 +23,12 @@ foreach ($users as $user) {
 $forum_ids = array_diff(range(6, 35), [23]);
 
 for ($i = 0; $i < THREADS_COUNT; ++$i) {
-	$postId = rand_value($users)->generateThread(rand_value($forum_ids));
-	for ($j = rand(0, MAX_REPLIES_COUNT) - 1; $j >= 0; --$j) {
-		rand_value($users)->generateReply($postId);
+	try {
+		$postId = rand_value($users)->generateThread(rand_value($forum_ids));
+		for ($j = rand(0, MAX_REPLIES_COUNT) - 1; $j >= 0; --$j) {
+			rand_value($users)->generateReply($postId);
+		}
+	} catch (Exception $ex) {
+		echo $ex;
 	}
 }
