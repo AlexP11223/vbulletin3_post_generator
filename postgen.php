@@ -6,14 +6,19 @@ require 'vendor/autoload.php';
 require 'utils.php';
 require 'User.php';
 
+const URI = 'http://localhost';
+const FORUM_ENCODING = 'windows-1251';
+
+const MESSAGE_LANGUAGES = ['en_US', 'ru_RU'];
+
 const THREADS_COUNT = 100;
 const MAX_REPLIES_COUNT = 21;
 
 /** @var User[] $users */
 $users = [
-	new User('admin', 'pass123'),
-	new User('user1', 'pass123'),
-	new User('user2', 'pass123')
+	new User('admin', 'pass123', URI, FORUM_ENCODING, MESSAGE_LANGUAGES),
+	new User('user1', 'pass123', URI, FORUM_ENCODING, MESSAGE_LANGUAGES),
+	new User('user2', 'pass123', URI, FORUM_ENCODING, MESSAGE_LANGUAGES)
 ];
 
 foreach ($users as $user) {

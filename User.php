@@ -5,12 +5,13 @@ namespace PostGen;
 use GuzzleHttp\Client;
 use Sunra\PhpSimple\HtmlDomParser;
 
-const BASE_URI = 'http://localhost';
-
 class User
 {
 	private $name;
 	private $password;
+
+	private $baseUri;
+	private $encoding;
 
 	/** @var Client $client */
 	private $client;
@@ -18,20 +19,21 @@ class User
 	/** @var \Faker\Generator[] $fakers */
 	private $fakers;
 
-	public function __construct($name, $password)
+	public function __construct($name, $password, $baseUri, $encoding, $locales)
 	{
 		$this->name = $name;
 		$this->password = $password;
-		$this->fakers = [
-			'en' => \Faker\Factory::create('en_US'),
-			'ru' => \Faker\Factory::create('ru_RU')
-		];
+		$this->baseUri = $baseUri;
+		$this->encoding = $encoding;
+		$this->fakers = array_map(function ($locale) {
+			return \Faker\Factory::create($locale);
+		}, $locales);
 	}
 
 	public function login()
 	{
 		$this->client = new Client([
-			'base_uri' => BASE_URI,
+			'base_uri' => $this->baseUri,
 			'cookies' => new \GuzzleHttp\Cookie\CookieJar(),
 			//'proxy' => 'localhost:8888',
 		]);
