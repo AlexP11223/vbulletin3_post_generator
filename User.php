@@ -11,26 +11,21 @@ class User
 {
 	private $name;
 	private $password;
+
+	/** @var Client $client */
 	private $client;
+
+	/** @var \Faker\Generator[] $fakers */
+	private $fakers;
 
 	public function __construct($name, $password)
 	{
 		$this->name = $name;
 		$this->password = $password;
-	}
-
-	/**
-	 * @param $text
-	 * @return string
-	 */
-	private function msg($text)
-	{
-		return '* ' . $this->name . ' * ' . $text;
-	}
-
-	private function log($text)
-	{
-		echo $this->msg($text) . "\n";
+		$this->fakers = [
+			'en' => \Faker\Factory::create('en_US'),
+			'ru' => \Faker\Factory::create('ru_RU')
+		];
 	}
 
 	public function login()
@@ -61,5 +56,90 @@ class User
 			throw new \Exception($this->msg('Failed to log in'));
 
 		$this->log('Logged in');
+	}
+
+	/**
+	 * @param $forumId
+	 * @return int post ID
+	 * @throws \Exception
+	 */
+	public function generateThread($forumId)
+	{
+		$this->log("Generating thread in forum $forumId");
+
+		$url = "/newthread.php?do=newthread&f=$forumId";
+
+		$html = $this->client->get($url)->getBody()->getContents();
+
+		$dom = HtmlDomParser::str_get_html($html);
+
+		$hiddenParams = flatten(array_map(function ($el) {
+			return [$el->name => $el->value];
+		}, $dom->find('input[type=hidden]')));
+
+		$response = $this->client->post($url, [
+			'allow_redirects' => false,
+			'form_params' => array_merge($hiddenParams, [
+				'subject' => $this->generateThreadSubject(),
+				'message' => $this->generateMessageText(),
+				'iconid' => 0,
+				'taglist' => '',
+				'parseurl' => 1,
+				'emailupdate' => 9999 // no
+			])
+		]);
+
+		if ($response->getStatusCode() != 302) {
+			var_dump($response);
+			throw new \Exception($this->msg('Failed to create thread'));
+		}
+
+		$threadUrl = $response->getHeader('Location')[0];
+		$parsedUrl = parse_url($threadUrl);
+		if (!$parsedUrl) {
+			var_dump($response);
+			throw new \Exception($this->msg("Failed to parse URL '$threadUrl'"));
+		}
+
+		parse_str($parsedUrl['query'], $query);
+		$id = (int) $query['p'];
+		if (!$id) {
+			var_dump($response);
+			throw new \Exception($this->msg("Failed to parse URL '$threadUrl'"));
+		}
+
+		$this->log("Created thread, post $id");
+
+		return $id;
+	}
+
+	/**
+	 * @param $text
+	 * @return string
+	 */
+	private function msg($text)
+	{
+		return '* ' . $this->name . ' * ' . $text;
+	}
+
+	private function log($text)
+	{
+		echo $this->msg($text) . "\n";
+	}
+
+	/**
+	 * @return string
+	 */
+	private function generateMessageText() {
+		return utf8_to_cp1251(implode("\r\n\r\n", array_map(function () {
+			return rand_value($this->fakers)->realText;
+		}, range(1, rand(1, 3)))));
+	}
+
+	/**
+	 * @return string
+	 */
+	private function generateThreadSubject() {
+		return utf8_to_cp1251(rand_value($this->fakers)->realText(80));
 	}
 }
