@@ -1,4 +1,4 @@
-Thread/post generator for vBulletin 3.8.11 using Faker, was used ro generate some test data on localhost.
+Thread/post generator for vBulletin 3.8.11 using Faker, was used to generate some test data on localhost.
 
 Disable min delay between posts in admin panel (default 30).
 
